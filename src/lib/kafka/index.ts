@@ -2,7 +2,8 @@ import * as Kafka from 'node-rdkafka';
 
 interface CreateClientInput {
   clientId?: string,
-  brokerList: string
+  brokerList: string,
+  logger?: any
 }
 
 function connectToProducer(producer) {
@@ -23,7 +24,7 @@ function connectToProducer(producer) {
   });
 }
 
-function createClient({ clientId = 'kafka', brokerList }: CreateClientInput) {
+function createClient({ clientId = 'kafka', brokerList, logger }: CreateClientInput) {
   const producer = new Kafka.Producer({
     'client.id': clientId,
     'metadata.broker.list': brokerList,
@@ -37,8 +38,13 @@ function createClient({ clientId = 'kafka', brokerList }: CreateClientInput) {
     'dr_cb': true
   });
 
-  producer.setPollInterval(100);
+  if (logger) {
+    producer.on('event.error', (error) => {
+      logger.error(error, 'Error from Kafka producer');
+    });
+  }
 
+  producer.setPollInterval(100);
 
   return { producer, connectToProducer };
 }

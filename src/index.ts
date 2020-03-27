@@ -13,7 +13,6 @@ async function run() {
     await connectToProducer(producer);
     logger.debug('Connected to Kafka');
 
-    logProducerErrors(producer);
   } catch (error) {
     logger.error({ error }, 'General Error');
   } finally {
