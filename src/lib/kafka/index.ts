@@ -3,17 +3,16 @@ import * as Kafka from 'node-rdkafka';
 interface CreateClientInput {
   clientId?: string,
   brokerList: string,
-  logger?: any
+  logger?: any,
+  earliest?: boolean
 }
 
-function connectToProducer(producer) {
+function connectToClient(producer: Kafka.Producer | Kafka.KafkaConsumer) {
   return new Promise((resolve, reject) => {
-    producer.once('ready', (clientInfo, brokerInfo) => {
-      resolve();
-    });
-    producer.once('connection.failure', (err) => {
-      reject(err);
-    });
+    producer
+      .once('ready', (clientInfo, brokerInfo) => resolve())
+      .once('connection.failure', (err) => reject(err));
+
     producer.connect();
 
     // Can always pass a callback instead of using 'connection.failure' event
@@ -24,7 +23,16 @@ function connectToProducer(producer) {
   });
 }
 
-function createClient({ clientId = 'kafka', brokerList, logger }: CreateClientInput) {
+async function getNMessages(consumer: Kafka.KafkaConsumer, n: number): Promise<any[]> {
+  return new Promise((resolve, reject) => {
+    consumer.consume(n, (err, msg) => {
+      // if (err) return reject(err);
+      return resolve(msg);
+    });
+  });
+}
+
+function createClient({ clientId = 'kafka', brokerList, logger, earliest = false }: CreateClientInput) {
   const producer = new Kafka.Producer({
     'client.id': clientId,
     'metadata.broker.list': brokerList,
@@ -38,6 +46,17 @@ function createClient({ clientId = 'kafka', brokerList, logger }: CreateClientIn
     'dr_cb': true
   });
 
+  const clientExtraConfig = earliest ? {
+    'auto.offset.reset': 'earliest' // consume from the start
+  } : {};
+
+  const consumer = new Kafka.KafkaConsumer({
+    'group.id': clientId,
+    'metadata.broker.list': brokerList,
+    'enable.auto.commit': false,
+    'socket.keepalive.enable': true,
+  }, clientExtraConfig);
+
   if (logger) {
     producer.on('event.error', (error) => {
       logger.error(error, 'Error from Kafka producer');
@@ -46,7 +65,7 @@ function createClient({ clientId = 'kafka', brokerList, logger }: CreateClientIn
 
   producer.setPollInterval(100);
 
-  return { producer, connectToProducer };
+  return { producer, consumer, connectToClient, getNMessages };
 }
 
 

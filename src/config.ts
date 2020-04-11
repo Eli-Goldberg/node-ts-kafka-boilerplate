@@ -2,11 +2,11 @@
 import { config as dotenvConfig } from 'dotenv'
 dotenvConfig()
 
-import * as convict from 'convict';
+import convict from 'convict';
 
 const config = convict({
   env: {
-    format: ['local', ,'dev', 'prod'],
+    format: ['local', 'dev', 'prod'],
     default: 'dev',
     arg: 'nodeEnv',
     env: 'NODE_ENV'
@@ -23,6 +23,12 @@ const config = convict({
     arg: 'kafka-broker-list',
     env: 'KAFKA_BROKER_LIST'
   },
+  consumerName: {
+    format: String,
+    default: 'kafka',
+    arg: 'consumer-name',
+    env: 'CONSUMER_NAME'
+  }
 });
 
 const env = config.get('env');

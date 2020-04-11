@@ -9,11 +9,11 @@ const createLogger = ({appName, logLevel}) => bunyan.createLogger({
       level: 'trace',
       type: 'raw',
       // log only non-error levels to stdout
-      stream: new BunyanSpecificLevelStream(['warn', 'info', 'debug', 'trace'], process.stdout)
+      stream: new BunyanSpecificLevelStream(['warn', 'info', 'debug', 'trace'], process.stdout, logLevel)
     },
     {
       level: 'error',
-      stream: process.stderr
+      stream: new BunyanSpecificLevelStream(['fatal', 'error'], process.stdout, 'error')
     }
   ]
 });
