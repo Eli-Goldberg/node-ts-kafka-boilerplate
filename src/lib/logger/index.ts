@@ -13,7 +13,8 @@ const createLogger = ({appName, logLevel}) => bunyan.createLogger({
     },
     {
       level: 'error',
-      stream: new BunyanSpecificLevelStream(['fatal', 'error'], process.stdout, 'error')
+      type: 'raw',
+      stream: new BunyanSpecificLevelStream(['fatal', 'error'], process.stderr, 'error')
     }
   ]
 });
